@@ -16,9 +16,9 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 
-// Declaring a WebServlet called SingleMovieServlet, which maps to url "/api/single-movie"
-@WebServlet(name = "SingleMovieServlet", urlPatterns = "/api/single-movie")
-public class SingleMovieServlet extends HttpServlet {
+// Declaring a WebServlet called SingleStarServlet, which maps to url "/api/single-star"
+@WebServlet(name = "SortByRatingAscServlet", urlPatterns = "/api/sortra")
+public class SortByRatingAscServlet extends HttpServlet {
     private static final long serialVersionUID = 2L;
 
     // Create a dataSource which registered in web.xml
@@ -35,7 +35,18 @@ public class SingleMovieServlet extends HttpServlet {
         response.setContentType("application/json"); // Response mime type
 
         // Retrieve parameter id from url request.
-        String id = request.getParameter("id");
+        String genre = request.getParameter("genre");
+        String title = request.getParameter("title");
+        String year = request.getParameter("year");
+        String director = request.getParameter("director");
+        String name = request.getParameter("name");
+        String offString = request.getParameter("offset");
+        String limit1 = request.getParameter("limit");
+
+        int offset = Integer.parseInt(offString);
+        int limit = Integer.parseInt(limit1);
+
+        System.out.println(offset);
 
         // Output stream to STDOUT
         PrintWriter out = response.getWriter();
@@ -51,15 +62,24 @@ public class SingleMovieServlet extends HttpServlet {
                     "				 join stars as s on sm.starId = s.id\n" +
                     "                join genres_in_movies as gm on m.id = gm.movieId\n" +
                     "				 join genres as g on gm.genreId = g.id\n" +
-                    "where m.id = ?\n" +
-                    "group by m.id, m.title, m.year, m.director, r.rating;";
+                    "where g.name like ? and m.title like ? and m.year like ? and m.director like ? and s.name like ? \n" +
+                    "group by m.id, m.title, m.year, m.director, r.rating\n" +
+                    "order by r.rating asc\n" +
+                    "limit ?\n" +
+                    "offset ?;";
 
             // Declare our statement
             PreparedStatement statement = dbcon.prepareStatement(query);
 
             // Set the parameter represented by "?" in the query to the id we get from url,
             // num 1 indicates the first "?" in the query
-            statement.setString(1, id);
+            statement.setString(1, '%' + genre + '%');
+            statement.setString(2, title + '%');
+            statement.setString(3, '%' + year + '%');
+            statement.setString(4, '%' + director + '%');
+            statement.setString(5, '%' + name + '%');
+            statement.setInt(6, limit);
+            statement.setInt(7, offset);
 
             // Perform the query
             ResultSet rs = statement.executeQuery();
@@ -114,4 +134,3 @@ public class SingleMovieServlet extends HttpServlet {
     }
 
 }
-
